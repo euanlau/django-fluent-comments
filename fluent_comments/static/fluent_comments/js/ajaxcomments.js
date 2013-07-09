@@ -56,7 +56,7 @@
                 selector = opts.contentSelector;
 
             var $content = $(opts.contentSelector);
-            var $form = $content.find('form[data-ajax-action]');
+            var $form = $content.find(opts.formSelector);
             var $submitBtn = $form.find('input[type="submit"]');
             var $textarea = $form.find('textarea');
 
@@ -71,7 +71,7 @@
 
             $submitBtn.unbind('click').bind('click', run);
 
-            $('.js-comments-form').wrap('<div class="js-comments-form-orig-position"></div>');
+            $form.wrap('<div class="js-comments-form-orig-position"></div>');
         },
 
         beginAjax: function flucom_beginajax($form)   {
@@ -99,9 +99,8 @@
                 data: comment,
                 dataType: 'json',
                 success: function(data) {
-                    opts.state.isDuringAjax = false;
-                    instance.removeWaitAnimation();
-                    instance.removeErrors();
+                    $(opts.formSelector).find('.js-errors').remove();
+                    $(opts.formSelector).find('.control-group.error').removeClass('error');
 
                     if (data.success) {
                         var $added;
@@ -119,11 +118,9 @@
                         instance.commentFailure(data);
                     }
                 },
-                error: function(data) {
-                    opts.state.isDuringAjax  = false;
+                complete: function(data) {
+                    opts.state.isDuringAjax = false;
                     instance.removeWaitAnimation();
-                    // Submit as non-ajax instead
-                    //$form.unbind('submit').submit();
                 }
             });
 
@@ -203,10 +200,6 @@
             }
         },
 
-        removeErrors: function removeErrors() {
-            $('form.js-comments-form .js-errors').remove();
-            $('form.js-comments-form .control-group.error').removeClass('error');
-        },
 
         removeWaitAnimation: function removeWaitAnimation() {
             // Remove the wait animation and message
