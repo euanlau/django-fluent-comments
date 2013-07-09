@@ -12,6 +12,7 @@
     // Settings
     $.fluentcomments.defaults = {
         listSelector: '#comments',
+        formSelector: 'form[data-ajax-action]',
         state: {
             isDuringAjax: false
         },
@@ -43,47 +44,37 @@
             // contentSelector is 'page fragment' option for .load() / .ajax() calls
             opts.contentSelector = opts.contentSelector || this.element;
 
-            this._setup();
+            this._bind();
 
             // Return true to indicate successful creation
             return true;
         },
 
-        _setup: function () {
+        _bind: function () {
             var instance = this,
-                    opts = this.options;
+                    opts = this.options,
+                selector = opts.contentSelector;
 
-            var formSelector = 'form.js-comments-form';
-            var commentform = $(formSelector);
             var $content = $(opts.contentSelector);
+            var $form = $content.find('form[data-ajax-action]');
+            var $submitBtn = $form.find('input[type="submit"]');
+            var $textarea = $form.find('textarea');
 
-            $content.find('form input[type="submit"]').bind("click", function () {
-                var $form = $(this).parent();
-                var comment = $form.find("textarea").val();
-                if ($.trim(comment).length != 0) {
+            var run =  function (e) {
+                e.preventDefault();
+                var comment = $textarea.val();
+                if ($.trim(comment).length > 0) {
                     var formData = $form.serialize();
-                    formData += "&parentId=" + $content.data("commentid");
-                    methods.postComment.call($this, formData);
+                    instance.beginAjax($form);
                 }
-            });
+            };
 
-            if( commentform.length > 0 ) {
-                commentForm.bind('submit', function(event) {
-                // Detect last active input.
-                // Submit if return is hit, or any button other then preview is hit.
-                //commentform.find(':input').focus(setActiveInput).mousedown(setActiveInput);
-                    event.preventDefault();  // only after ajax call worked.
-                    var form = event.target;
-
-                    instance.beginAjax(form);
-                    return false;
-                });
-            }
+            $submitBtn.unbind('click').bind('click', run);
 
             $('.js-comments-form').wrap('<div class="js-comments-form-orig-position"></div>');
         },
 
-        beginAjax: function flucom_beginajax(form)   {
+        beginAjax: function flucom_beginajax($form)   {
             var instance = this,
                     opts = this.options;
 
@@ -94,7 +85,6 @@
             }
 
             opts.state.isDuringAjax = true;
-            var $form = $(form);
             var comment = $form.serialize();
             var url = $form.attr('action') || './';
             var ajaxurl = $form.attr('data-ajax-action');
