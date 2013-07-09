@@ -111,7 +111,7 @@
                         // remove textarea value
                         $(opts.formSelector).find('textarea').val("");
 
-                        instance.onCommentSuccess(data);
+                        instance._addComment(data);
 
                         var $message_span;
                         if( data.is_moderated )
@@ -155,7 +155,7 @@
         },
 
 
-        onCommentSuccess: function commentSuccess(data) {
+        _addComment: function flucom_addcomment(data) {
             // data contains the server-side response.
             var opts = this.options;
             var html = data['html'];
@@ -176,8 +176,6 @@
                 $comments.children('.empty-message').hide().fadeOut(600);
                 $comments.append(html).removeClass('empty');
             }
-
-
 
             $new_comment =  $("#c" + parseInt(data.comment_id));
             $new_comment.hide().show(opts.speed);
