@@ -19,6 +19,7 @@
         listSelector: '#comments',
         formSelector: 'form[data-ajax-action]',
         state: {
+            action: 'post',
             isDuringAjax: false
         },
         scroll: {
@@ -27,6 +28,10 @@
             selector: 'html, body',
             topOffsetPx: 40,
             previewOffsetPx: 20
+        },
+        preview : {
+            selector: '.comment-preview-area',
+            speed: 500
         },
         contentSelector: null,
         debug: false
@@ -107,6 +112,10 @@
             var $textarea = $form.find('textarea');
 
             var run =  function (e) {
+                // whether it is post or preview
+                var action = e.target.name.toLowerCase();
+
+                opts.state.action = action;
                 e.preventDefault();
                 var comment = $textarea.val();
                 if ($.trim(comment).length > 0) {
@@ -114,7 +123,6 @@
                     instance.beginAjax($form);
                 }
             };
-
             $submitBtn.unbind('click').bind('click', run);
 
             $form.wrap('<div class="js-comments-form-orig-position"></div>');
@@ -198,7 +206,8 @@
 
         beginAjax: function flucom_beginajax($form)   {
             var instance = this,
-                    opts = this.options;
+                    opts = this.options,
+               isPreview = (opts.state.action == 'preview');
 
             $('div.comment-error').remove();
             if (opts.state.isDuringAjax) {
@@ -206,12 +215,14 @@
             }
 
             opts.state.isDuringAjax = true;
-            var comment = $form.serialize();
+            var comment = $form.serialize()  + (isPreview ? '&preview=1' : '') ;
             var url = $form.attr('action') || './';
             var ajaxurl = $form.attr('data-ajax-action');
 
-            // Add a wait animation
-            $(opts.loading.selector).fadeIn(opts.loading.speed);
+            // Add a wait animation if it is not preview
+            if (!isPreview) {
+                $(opts.loading.selector).fadeIn(opts.loading.speed);
+            }
 
             // Use AJAX to post the comment.
             $.ajax({
