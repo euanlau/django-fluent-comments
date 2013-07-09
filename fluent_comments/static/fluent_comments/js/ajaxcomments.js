@@ -11,6 +11,11 @@
 
     // Settings
     $.fluentcomments.defaults = {
+        loading: {
+            speed: 'fast',
+            selector: '#comment-waiting',
+        },
+        speed: null,
         listSelector: '#comments',
         formSelector: 'form[data-ajax-action]',
         state: {
@@ -90,7 +95,7 @@
             var ajaxurl = $form.attr('data-ajax-action');
 
             // Add a wait animation
-            $('#comment-waiting').fadeIn(1000);
+            $(opts.loading.selector).fadeIn(opts.loading.speed);
 
             // Use AJAX to post the comment.
             $.ajax({
@@ -103,8 +108,10 @@
                     $(opts.formSelector).find('.control-group.error').removeClass('error');
 
                     if (data.success) {
-                        var $added;
-                        $added = instance.onCommentSuccess(data);
+                        // remove textarea value
+                        $(opts.formSelector).find('textarea').val("");
+
+                        instance.onCommentSuccess(data);
 
                         var $message_span;
                         if( data.is_moderated )
@@ -120,7 +127,7 @@
                 },
                 complete: function(data) {
                     opts.state.isDuringAjax = false;
-                    instance.removeWaitAnimation();
+                    $(opts.loading.selector).hide(opts.loading.speed).stop();
                 }
             });
 
@@ -149,23 +156,9 @@
 
 
         onCommentSuccess: function commentSuccess(data) {
-            // Clean form
-            $('form.js-comments-form textarea').last().val("");
-            $('#id_comment').val('');
-
-            // Show comment
-            var $new_comment = this.addComment(data);
-
-            // Smooth introduction to the new comment.
-            $new_comment.hide().show(600);
-
-            return $new_comment;
-        },
-
-        addComment: function addComment(data) {
             // data contains the server-side response.
             var opts = this.options;
-            var html = data['html']
+            var html = data['html'];
             var parent_id = data['parent_id'];
 
             var $new_comment;
@@ -184,7 +177,12 @@
                 $comments.append(html).removeClass('empty');
             }
 
-            return $("#c" + parseInt(data.comment_id));
+
+
+            $new_comment =  $("#c" + parseInt(data.comment_id));
+            $new_comment.hide().show(opts.speed);
+
+            return;
         },
 
         commentFailure: function commentFailure(data) {
@@ -200,13 +198,6 @@
             }
         },
 
-
-        removeWaitAnimation: function removeWaitAnimation() {
-            // Remove the wait animation and message
-            $('#comment-waiting').hide().stop();
-        },
-
-
         // update options
         update: function flucom_options(key) {
             if ($.isPlainObject(key)) {
@@ -214,6 +205,24 @@
             }
         }
     };
+
+    /*
+        ----------------------------
+        Fluent Comments function
+        ----------------------------
+
+        Borrowed logic from the following...
+
+        jQuery UI
+        - https://github.com/jquery/jquery-ui/blob/master/ui/jquery.ui.widget.js
+
+        jCarousel
+        - https://github.com/jsor/jcarousel/blob/master/lib/jquery.jcarousel.js
+
+        Masonry
+        - https://github.com/desandro/masonry/blob/master/jquery.masonry.js
+
+    */
 
     $.fn.fluentcomments = function (options) {
         var thisCall = typeof options;
@@ -229,12 +238,12 @@
 
                     if (!instance) {
                         // not setup yet
-                        // return $.error('Method ' + options + ' cannot be called until Infinite Scroll is setup');
+                        // return $.error('Method ' + options + ' cannot be called until Fluent Comments is setup');
                         return false;
                     }
 
                     if (!$.isFunction(instance[options]) || options.charAt(0) === "_") {
-                        // return $.error('No such method ' + options + ' for Infinite Scroll');
+                        // return $.error('No such method ' + options + ' for Fluent Comments');
                         return false;
                     }
 
