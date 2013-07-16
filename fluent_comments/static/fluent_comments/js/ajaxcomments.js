@@ -13,7 +13,7 @@
     $.fluentcomments.defaults = {
         loading: {
             speed: 'fast',
-            selector: '#comment-waiting',
+            selector: '#comment-waiting'
         },
         speed: null,
         listSelector: '#comments',
